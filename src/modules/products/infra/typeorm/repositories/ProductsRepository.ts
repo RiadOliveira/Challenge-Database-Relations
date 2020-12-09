@@ -1,4 +1,4 @@
-import { getRepository, Repository, In } from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 
 import IProductsRepository from '@modules/products/repositories/IProductsRepository';
 import ICreateProductDTO from '@modules/products/dtos/ICreateProductDTO';
@@ -21,21 +21,72 @@ class ProductsRepository implements IProductsRepository {
     price,
     quantity,
   }: ICreateProductDTO): Promise<Product> {
-    // TODO
+    const newProduct = this.ormRepository.create({ name, price, quantity });
+
+    await this.ormRepository.save(newProduct);
+
+    return newProduct;
   }
 
   public async findByName(name: string): Promise<Product | undefined> {
-    // TODO
+    const findedProduct = await this.ormRepository.findOne({
+      where: { name },
+    });
+
+    return findedProduct;
   }
 
-  public async findAllById(products: IFindProducts[]): Promise<Product[]> {
-    // TODO
+  public async findAllById(
+    products: IFindProducts[],
+  ): Promise<Product[] | undefined> {
+    if (products.length === 0) {
+      return undefined;
+    }
+
+    const getProductsPromises = products.map(async product => {
+      const findedProduct = await this.ormRepository.findOne(product.id);
+
+      return findedProduct;
+    });
+
+    const allProducts = (await Promise.all(getProductsPromises)) as Product[];
+
+    const validate = {
+      value: true,
+    };
+
+    allProducts.forEach(product => {
+      if (product === undefined) {
+        validate.value = false;
+      }
+    });
+
+    if (!validate.value) {
+      return undefined;
+    }
+
+    return allProducts;
   }
 
   public async updateQuantity(
     products: IUpdateProductsQuantityDTO[],
-  ): Promise<Product[]> {
-    // TODO
+    findedProducts: Product[],
+  ): Promise<Product[] | undefined> {
+    const updatedProducts = findedProducts.map((product, index) => {
+      const updatedProduct = product;
+
+      updatedProduct.quantity -= products[index].quantity;
+
+      return updatedProduct;
+    });
+
+    if (updatedProducts.find(product => product.quantity < 0)) {
+      return undefined;
+    }
+
+    await this.ormRepository.save(updatedProducts);
+
+    return updatedProducts;
   }
 }
 

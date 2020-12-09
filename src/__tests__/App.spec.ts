@@ -115,7 +115,7 @@ describe('App', () => {
     const product = await request(app).post('/products').send({
       name: 'Produto 01',
       price: 500,
-      quantity: 50,
+      quantity: 10,
     });
 
     const customer = await request(app).post('/customers').send({
@@ -300,7 +300,7 @@ describe('App', () => {
           expect.objectContaining({
             product_id: product.body.id,
             price: '500.00',
-            quantity: 5,
+            quantity: 45,
           }),
         ]),
       }),

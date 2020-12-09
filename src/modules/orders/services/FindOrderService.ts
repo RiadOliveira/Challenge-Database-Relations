@@ -1,7 +1,6 @@
+import AppError from '@shared/errors/AppError';
 import { inject, injectable } from 'tsyringe';
 
-import IProductsRepository from '@modules/products/repositories/IProductsRepository';
-import ICustomersRepository from '@modules/customers/repositories/ICustomersRepository';
 import Order from '../infra/typeorm/entities/Order';
 import IOrdersRepository from '../repositories/IOrdersRepository';
 
@@ -12,13 +11,17 @@ interface IRequest {
 @injectable()
 class FindOrderService {
   constructor(
-    private ordersRepository: IOrdersRepository,
-    private productsRepository: IProductsRepository,
-    private customersRepository: ICustomersRepository,
+    @inject('OrdersRepository') private ordersRepository: IOrdersRepository,
   ) {}
 
-  public async execute({ id }: IRequest): Promise<Order | undefined> {
-    // TODO
+  public async execute({ id }: IRequest): Promise<Order> {
+    const order = await this.ordersRepository.findById(id);
+
+    if (!order) {
+      throw new AppError('Invalid Order ID Passed', 400);
+    }
+
+    return order;
   }
 }
 
