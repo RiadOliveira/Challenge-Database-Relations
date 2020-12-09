@@ -49,9 +49,13 @@ class CreateOrderService {
       throw new AppError('Insuficient quantities of this product', 400);
     }
 
+    findedProducts.forEach((findedProduct, index) => {
+      findedProducts[index].quantity = products[index].quantity;
+    });
+
     const newOrder = await this.ordersRepository.create({
       customer,
-      products: updatedProductsQuantity,
+      products: findedProducts,
     });
 
     return newOrder;
